@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS enrollments, course_prerequisites, courses, students CASCADE;
+
 CREATE TABLE IF NOT EXISTS students (
   id                 SERIAL PRIMARY KEY,
   first              VARCHAR(100) NOT NULL,
