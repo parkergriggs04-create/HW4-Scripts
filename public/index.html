@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>University Registrar</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f5f7fa;
+      color: #222222;
+      margin: 0;
+      padding: 30px 15px;
+    }
+    .container { max-width: 820px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 16px 0; }
+    h2 { font-size: 16px; margin: 0 0 16px 0; }
+    .hide { display: none; }
+
+    .nav-row { margin-bottom: 12px; }
+    .tab-btn {
+      background-color: transparent;
+      border: none;
+      padding: 8px 14px;
+      margin-right: 4px;
+      border-radius: 6px;
+      font-size: 15px;
+      color: #4b5563;
+      cursor: pointer;
+    }
+    .tab-btn:hover { background-color: #e5e7eb; }
+    .tab-btn.active { background-color: #1d63b8; color: #ffffff; }
+
+    .card {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .form-group { margin-bottom: 14px; max-width: 400px; }
+    .form-group.full-width { max-width: 100%; margin-bottom: 0; }
+    label { display: block; font-size: 14px; color: #4b5563; margin-bottom: 4px; }
+    input[type="text"], input[type="email"], input[type="date"], input[type="number"], select {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      background-color: #f9fafb;
+    }
+
+    .btn-primary {
+      background-color: #1d63b8;
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn-primary:hover { background-color: #154d8f; }
+    .cancel-link { color: #1d63b8; text-decoration: none; font-weight: normal; margin-left: 6px; }
+    .cancel-link:hover { text-decoration: underline; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .data-table th, .data-table td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .data-table th { color: #4b5563; font-weight: bold; }
+    .data-table td.actions-cell { text-align: right; }
+
+    .action-link { background: none; border: none; font-size: 14px; cursor: pointer; padding: 0; }
+    .action-link.edit { color: #1d63b8; }
+    .action-link.delete { color: #b91c1c; }
+    .action-link:hover { text-decoration: underline; }
+
+    .total-credits { margin: 14px 0 0 0; font-weight: bold; font-size: 15px; }
+
+    .message { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14px; }
+    .message.loading { background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .message.success { background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .message.error { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>University Registrar</h1>
+
+    <!-- Main Menu -->
+    <div class="nav-row">
+      <button type="button" id="btn-create" class="tab-btn active" onclick="setMode('create')">Create</button>
+      <button type="button" id="btn-manage" class="tab-btn" onclick="setMode('manage')">Manage</button>
+      <button type="button" id="btn-transcript" class="tab-btn" onclick="setMode('transcript')">Transcript</button>
+    </div>
+
+    <!-- Table Menu -->
+    <div id="table-nav" class="nav-row">
+      <button type="button" id="tab-students" class="tab-btn active" onclick="setTable('students')">Students</button>
+      <button type="button" id="tab-courses" class="tab-btn" onclick="setTable('courses')">Courses</button>
+      <button type="button" id="tab-prerequisites" class="tab-btn" onclick="setTable('prerequisites')">Prerequisites</button>
+      <button type="button" id="tab-enrollments" class="tab-btn" onclick="setTable('enrollments')">Enrollments</button>
+    </div>
+
+    <!-- Status Message -->
+    <div id="message" class="message hide"></div>
+
+    <!-- CREATE / EDIT FORMS -->
+    <div id="form-card" class="card">
+
+      <!-- Students Form -->
+      <form id="form-students">
+        <h2 id="title-students">New Student</h2>
+        <input type="hidden" name="table" value="students">
+        <input type="hidden" name="id" id="stu-id">
+
+        <div class="form-group">
+          <label>First name</label>
+          <input type="text" name="first" id="stu-first" required>
+        </div>
+        <div class="form-group">
+          <label>Last name</label>
+          <input type="text" name="last" id="stu-last" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" id="stu-email" required>
+        </div>
+        <div class="form-group">
+          <label>Birthdate</label>
+          <input type="date" name="birthdate" id="stu-birthdate" required>
+        </div>
+        <div class="form-group">
+          <label>Date of enrollment</label>
+          <input type="date" name="date_of_enrollment" id="stu-enrollment" required>
+        </div>
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+
+      <!-- Courses Form -->
+      <form id="form-courses" class="hide">
+        <h2 id="title-courses">New Course</h2>
+        <input type="hidden" name="table" value="courses">
+        <input type="hidden" name="id" id="crs-id">
+
+        <div class="form-group">
+          <label>Code</label>
+          <input type="text" name="code" id="crs-code" required>
+        </div>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" name="title" id="crs-title" required>
+        </div>
+        <div class="form-group">
+          <label>Credits</label>
+          <input type="number" name="credits" id="crs-credits" min="1" max="6" required>
+        </div>
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+
+      <!-- Prerequisites Form -->
+      <form id="form-prerequisites" class="hide">
+        <h2 id="title-prerequisites">New Prerequisite</h2>
+        <input type="hidden" name="table" value="prerequisites">
+        <input type="hidden" name="id" id="pre-id">
+
+        <div class="form-group">
+          <label>Course</label>
+          <select name="course_id" id="pre-course" required></select>
+        </div>
+        <div class="form-group">
+          <label>Requires</label>
+          <select name="prereq_id" id="pre-requires" required></select>
+        </div>
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+
+      <!-- Enrollments Form -->
+      <form id="form-enrollments" class="hide">
+        <h2 id="title-enrollments">New Enrollment</h2>
+        <input type="hidden" name="table" value="enrollments">
+        <input type="hidden" name="id" id="enr-id">
+
+        <div class="form-group">
+          <label>Student</label>
+          <select name="student_id" id="enr-student" required></select>
+        </div>
+        <div class="form-group">
+          <label>Course</label>
+          <select name="course_id" id="enr-course" required></select>
+        </div>
+        <div class="form-group">
+          <label>Grade</label>
+          <select name="grade" id="enr-grade" required>
+            <option value="">Select...</option>
+            <option value="A">A</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B">B</option>
+            <option value="B-">B-</option>
+            <option value="C+">C+</option>
+            <option value="C">C</option>
+            <option value="C-">C-</option>
+            <option value="D">D</option>
+            <option value="F">F</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+
+    </div>
+
+    <!-- MANAGE TABLE OUTPUT (HTML generated by PHP) -->
+    <div id="manage-card" class="card hide">
+      <div id="table-output"></div>
+    </div>
+
+    <!-- TRANSCRIPT VIEW (HTML generated by PHP) -->
+    <div id="transcript-section" class="hide">
+      <div class="card">
+        <div class="form-group full-width">
+          <label>Student</label>
+          <select id="transcript-student" onchange="loadTranscript()"></select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="transcript-output"></div>
+        <p class="total-credits">Total credits: <span id="total-credits">0</span></p>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let currentMode = "create";
+    let currentTable = "students";
+
+    function showMessage(text, type) {
+      let msg = document.getElementById("message");
+      msg.textContent = text;
+      msg.className = "message " + type;
+    }
+
+    function hideMessage() {
+      document.getElementById("message").className = "message hide";
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      hideMessage();
+      updateView();
+    }
+
+    function setTable(table) {
+      currentTable = table;
+      hideMessage();
+      updateView();
+    }
+
+    function updateView() {
+      document.getElementById("btn-create").classList.remove("active");
+      document.getElementById("btn-manage").classList.remove("active");
+      document.getElementById("btn-transcript").classList.remove("active");
+      document.getElementById("btn-" + currentMode).classList.add("active");
+
+      let tables = ["students", "courses", "prerequisites", "enrollments"];
+      for (let i = 0; i < tables.length; i++) {
+        let t = tables[i];
+        document.getElementById("tab-" + t).classList.remove("active");
+        document.getElementById("form-" + t).classList.add("hide");
+      }
+      document.getElementById("tab-" + currentTable).classList.add("active");
+
+      resetForms();
+
+      if (currentMode === "create") {
+        document.getElementById("table-nav").classList.remove("hide");
+        document.getElementById("form-card").classList.remove("hide");
+        document.getElementById("manage-card").classList.add("hide");
+        document.getElementById("transcript-section").classList.add("hide");
+        document.getElementById("form-" + currentTable).classList.remove("hide");
+        loadDropdowns();
+      } else if (currentMode === "manage") {
+        document.getElementById("table-nav").classList.remove("hide");
+        document.getElementById("form-card").classList.add("hide");
+        document.getElementById("manage-card").classList.remove("hide");
+        document.getElementById("transcript-section").classList.add("hide");
+        loadTable();
+      } else if (currentMode === "transcript") {
+        document.getElementById("table-nav").classList.add("hide");
+        document.getElementById("form-card").classList.add("hide");
+        document.getElementById("manage-card").classList.add("hide");
+        document.getElementById("transcript-section").classList.remove("hide");
+        loadTranscriptStudents();
+      }
+    }
+
+    // Submit handler for all 4 forms (same pattern as index2.php)
+    let formIds = ["form-students", "form-courses", "form-prerequisites", "form-enrollments"];
+    for (let i = 0; i < formIds.length; i++) {
+      document.getElementById(formIds[i]).addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const params = new URLSearchParams(new FormData(this));
+        params.append("action", params.get("id") !== "" ? "update" : "create");
+
+        showMessage("Loading...", "loading");
+        const response = await fetch("api.php", { method: "POST", body: params });
+        const result = await response.json();
+
+        if (!response.ok) {
+          showMessage(result.error, "error");
+          return;
+        }
+        showMessage(result.message, "success");
+        resetForms();
+        if (currentMode === "manage") {
+          document.getElementById("form-card").classList.add("hide");
+          loadTable();
+        }
+      });
+    }
+
+    // Loads <option> HTML prepared and escaped by PHP
+    async function loadDropdowns() {
+      const response = await fetch("api.php?action=dropdowns");
+      const result = await response.json();
+      if (response.ok) {
+        document.getElementById("enr-student").innerHTML = result.student_options;
+        document.getElementById("pre-course").innerHTML = result.course_options;
+        document.getElementById("pre-requires").innerHTML = result.course_options;
+        document.getElementById("enr-course").innerHTML = result.course_options;
+      }
+    }
+
+    // Loads Manage table HTML prepared and escaped by PHP
+    async function loadTable() {
+      showMessage("Loading...", "loading");
+      const response = await fetch("api.php?action=list&table=" + currentTable);
+      const result = await response.json();
+      hideMessage();
+
+      if (!response.ok) {
+        showMessage(result.error, "error");
+        return;
+      }
+      document.getElementById("table-output").innerHTML = result.html;
+    }
+
+    // Fetches a single record from PHP to populate the Edit form
+    async function editRecord(id) {
+      await loadDropdowns();
+      resetForms();
+
+      const response = await fetch("api.php?action=get&table=" + currentTable + "&id=" + id);
+      const result = await response.json();
+      if (!response.ok) {
+        showMessage(result.error, "error");
+        return;
+      }
+
+      let r = result.data;
+      document.getElementById("form-card").classList.remove("hide");
+      document.getElementById("form-" + currentTable).classList.remove("hide");
+      document.getElementById("title-" + currentTable).innerHTML =
+        "Editing record #" + Number(r.id) +
+        " <a href='#' class='cancel-link' onclick='cancelEdit(); return false;'>Cancel</a>";
+
+      if (currentTable === "students") {
+        document.getElementById("stu-id").value = r.id;
+        document.getElementById("stu-first").value = r.first;
+        document.getElementById("stu-last").value = r.last;
+        document.getElementById("stu-email").value = r.email;
+        document.getElementById("stu-birthdate").value = r.birthdate;
+        document.getElementById("stu-enrollment").value = r.date_of_enrollment;
+      } else if (currentTable === "courses") {
+        document.getElementById("crs-id").value = r.id;
+        document.getElementById("crs-code").value = r.code;
+        document.getElementById("crs-title").value = r.title;
+        document.getElementById("crs-credits").value = r.credits;
+      } else if (currentTable === "prerequisites") {
+        document.getElementById("pre-id").value = r.id;
+        document.getElementById("pre-course").value = r.course_id;
+        document.getElementById("pre-requires").value = r.prereq_id;
+      } else if (currentTable === "enrollments") {
+        document.getElementById("enr-id").value = r.id;
+        document.getElementById("enr-student").value = r.student_id;
+        document.getElementById("enr-course").value = r.course_id;
+        document.getElementById("enr-grade").value = r.grade;
+      }
+    }
+
+    function cancelEdit() {
+      resetForms();
+      document.getElementById("form-card").classList.add("hide");
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm("Are you sure you want to delete this record?")) return;
+
+      const params = new URLSearchParams();
+      params.append("action", "delete");
+      params.append("table", currentTable);
+      params.append("id", id);
+
+      showMessage("Loading...", "loading");
+      const response = await fetch("api.php", { method: "POST", body: params });
+      const result = await response.json();
+
+      if (!response.ok) {
+        showMessage(result.error, "error");
+        return;
+      }
+      showMessage(result.message, "success");
+      document.getElementById("form-card").classList.add("hide");
+      loadTable();
+    }
+
+    async function loadTranscriptStudents() {
+      showMessage("Loading...", "loading");
+      const response = await fetch("api.php?action=dropdowns");
+      const result = await response.json();
+      hideMessage();
+
+      let select = document.getElementById("transcript-student");
+      select.innerHTML = result.transcript_student_options;
+      if (select.value !== "") {
+        loadTranscript();
+      } else {
+        document.getElementById("transcript-output").innerHTML = "";
+        document.getElementById("total-credits").textContent = "0";
+      }
+    }
+
+    async function loadTranscript() {
+      let studentId = document.getElementById("transcript-student").value;
+      if (!studentId) return;
+
+      showMessage("Loading...", "loading");
+      const response = await fetch("api.php?action=transcript&student_id=" + studentId);
+      const result = await response.json();
+      hideMessage();
+
+      if (!response.ok) {
+        showMessage(result.error, "error");
+        return;
+      }
+      document.getElementById("transcript-output").innerHTML = result.html;
+      document.getElementById("total-credits").textContent = result.total_credits;
+    }
+
+    function resetForms() {
+      document.getElementById("form-students").reset();
+      document.getElementById("stu-id").value = "";
+      document.getElementById("title-students").textContent = "New Student";
+
+      document.getElementById("form-courses").reset();
+      document.getElementById("crs-id").value = "";
+      document.getElementById("title-courses").textContent = "New Course";
+
+      document.getElementById("form-prerequisites").reset();
+      document.getElementById("pre-id").value = "";
+      document.getElementById("title-prerequisites").textContent = "New Prerequisite";
+
+      document.getElementById("form-enrollments").reset();
+      document.getElementById("enr-id").value = "";
+      document.getElementById("title-enrollments").textContent = "New Enrollment";
+    }
+
+    updateView();
+  </script>
+</body>
+</html>
