@@ -1,6 +1,48 @@
 <?php
 class DatabaseHelper {
+    private static $initialized = false;
+
+    public static function ensureSchema($pdo) {
+        if (self::$initialized) {
+            return;
+        }
+        self::$initialized = true;
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS students (
+              id                 SERIAL PRIMARY KEY,
+              first              VARCHAR(100) NOT NULL,
+              last               VARCHAR(100) NOT NULL,
+              email              VARCHAR(255) NOT NULL UNIQUE,
+              birthdate          DATE NOT NULL,
+              date_of_enrollment DATE NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS courses (
+              id                 SERIAL PRIMARY KEY,
+              code               VARCHAR(255) NOT NULL UNIQUE,
+              title              VARCHAR(255) NOT NULL,
+              credits            INTEGER NOT NULL CHECK (credits BETWEEN 1 AND 6)
+            );
+            CREATE TABLE IF NOT EXISTS course_prerequisites (
+              id                 SERIAL PRIMARY KEY,
+              course_id          INTEGER NOT NULL REFERENCES courses(id),
+              prereq_id          INTEGER NOT NULL REFERENCES courses(id),
+              UNIQUE (course_id, prereq_id),
+              CHECK (course_id <> prereq_id)
+            );
+            CREATE TABLE IF NOT EXISTS enrollments (
+              id                 SERIAL PRIMARY KEY,
+              student_id         INTEGER NOT NULL REFERENCES students(id),
+              course_id          INTEGER NOT NULL REFERENCES courses(id),
+              grade              VARCHAR(2) NOT NULL CHECK (grade IN ('A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F')),
+              UNIQUE (student_id, course_id)
+            );
+        ");
+    }
+
     public static function runQuery($pdo, $sql, $parameters = array()) {
+        self::ensureSchema($pdo);
+
         if (!is_array($parameters)) {
             $parameters = array($parameters);
         }
