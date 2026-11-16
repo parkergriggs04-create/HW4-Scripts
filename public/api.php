@@ -133,6 +133,6 @@ try {
 
 } catch (Exception $e) {
     error_log($e->getMessage());
-    fail("A server error occurred while processing your request.", 500);
+    fail($e->getMessage(), 500);
 }
 ?>
